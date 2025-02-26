@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Chess Frontend</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="/webjars/jquery/3.7.1/jquery.min.js"></script>
+    <!--script src="/webjars/github-com-jhlywa-chess-js/1.0.0-beta.8/chess.ts"></script-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.12.1/chess.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css"/>
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .board-container {
+            width: 500px;
+            margin: 0 auto;
+        }
+        .controls {
+            text-align: center;
+            margin: 20px;
+        }
+        .status {
+            text-align: center;
+            margin: 10px;
+            font-weight: bold;
+        }
+        .error {
+            color: red;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <button id="newGameBtn">New Game</button>
+        </div>
+        
+        <div class="status" id="status"></div>
+        
+        <div class="board-container">
+            <div id="board"></div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        var board = null;
+        var game = new Chess();
+        var $status = $('#status');
+
+        function onDragStart(source, piece, position, orientation) {
+            if (game.game_over()) return false;
+            if (!game.turn() === 'w') return false;
+            if (piece.search(/^b/) !== -1) return false;
+        }
+
+        function onDrop(source, target) {
+            var move = game.move({
+                from: source,
+                to: target,
+                promotion: 'q'
+            });
+
+            if (move === null) return 'snapback';
+            
+            updateStatus();
+            
+            // Send move to server
+            $.post('/move', { move: move.san })
+                .done(function(response) {
+                    if (response.gameOver) {
+                        updateStatus();
+                    } else {
+                        // Make engine's move
+                        game.load(response.fen);
+                        board.position(response.fen);
+                        updateStatus();
+                    }
+                })
+                .fail(function(jqXHR, textStatus, errorThrown) {
+                    console.error('Error:', textStatus, errorThrown);
+                    game.undo();
+                    board.position(game.fen());
+                    updateStatus();
+                });
+        }
+
+        function updateStatus() {
+            var status = '';
+
+            if (game.in_checkmate()) {
+                status = 'Game over, ' + (game.turn() === 'w' ? 'black' : 'white') + ' wins by checkmate.';
+            } else if (game.in_draw()) {
+                status = 'Game over, drawn position';
+            } else {
+                status = (game.turn() === 'w' ? 'White' : 'Black') + ' to move';
+                if (game.in_check()) {
+                    status += ', ' + (game.turn() === 'w' ? 'White' : 'Black') + ' is in check';
+                }
+            }
+
+            $status.html(status);
+        }
+
+        var config = {
+            draggable: true,
+            position: 'start',
+            onDragStart: onDragStart,
+            onDrop: onDrop,
+            pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+        };
+        
+        board = Chessboard('board', config);
+        updateStatus();
+
+        $('#newGameBtn').on('click', function() {
+            $.post('/newgame', function(response) {
+                game = new Chess();
+                board.position('start');
+                updateStatus();
+            });
+        });
+
+        $(window).resize(function() {
+            board.resize();
+        });
+    </script>
+</body>
+</html> 

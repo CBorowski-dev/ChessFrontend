@@ -1,0 +1,4 @@
+com/example/chessfrontend/ChessFrontendApplication.class
+com/example/chessfrontend/service/ChessEngineService.class
+com/example/chessfrontend/model/Game.class
+com/example/chessfrontend/controller/ChessController.class
