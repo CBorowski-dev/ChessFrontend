@@ -40,16 +40,16 @@ public class Game {
                 }
             }
         }
-        System.out.println("Initialized pieces: " + pieces);
+        // System.out.println("Initialized pieces: " + pieces);
     }
 
     public void setLastMove(String move) {
-        System.out.println("Making move: " + move + " Current FEN: " + fen);
-        System.out.println("Current pieces before move: " + pieces);
+        // System.out.println("Making move: " + move + " Current FEN: " + fen);
+        // System.out.println("Current pieces before move: " + pieces);
         this.lastMove = move;
         updatePosition(move);
-        System.out.println("Pieces after move: " + pieces);
-        System.out.println("New FEN: " + fen);
+        // System.out.println("Pieces after move: " + pieces);
+        // System.out.println("New FEN: " + fen);
     }
 
     private void updatePosition(String moveStr) {
@@ -91,10 +91,10 @@ public class Game {
             piece = playerTurn ? "P" : "p";
         }
 
-        System.out.println("Piece type determined: " + piece);
+        // System.out.println("Piece type determined: " + piece);
 
         String sourceSquare = findSourceSquare(piece, targetSquare, matcher.group(2), matcher.group(3));
-        System.out.println("Moving " + piece + " from " + sourceSquare + " to " + targetSquare);
+        // System.out.println("Moving " + piece + " from " + sourceSquare + " to " + targetSquare);
         
         String movingPiece = pieces.remove(sourceSquare);
         if (movingPiece == null) {
@@ -113,7 +113,7 @@ public class Game {
     }
 
     private String findSourceSquare(String piece, String targetSquare, String sourceFile, String sourceRank) {
-        System.out.println("--> Finding source square for move: " + piece + " " + targetSquare + " " + sourceFile + " " + sourceRank);
+        // System.out.println("--> Finding source square for move: " + piece + " " + targetSquare + " " + sourceFile + " " + sourceRank);
         
         // For pawns without explicit source file, we know it must be on the same file as target
         if (piece.toUpperCase().equals("P") && sourceFile == null) {
